@@ -1,7 +1,6 @@
 package com.jFastApi.app.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jFastApi.app.exception.ApplicationException;
 import com.jFastApi.app.http.Response;
 import com.jFastApi.app.http.enumeration.ContentType;
 import com.jFastApi.app.http.enumeration.HttpStatus;
@@ -18,42 +17,54 @@ public final class ResponseUtility {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    public static void sendErrorResponse(Exception ex, HttpExchange exchange) {
-
+    /**
+     * Sends an error response back to the client in JSON format.
+     *
+     * @param ex         The exception that occurred.
+     * @param exchange   The HttpExchange object for sending the response.
+     * @param statusCode The HTTP status code to send (e.g., 400, 404, 500).
+     */
+    public static void sendErrorResponse(Exception ex, HttpExchange exchange, HttpStatus statusCode) {
         try {
-
+            // Create a simple map with a "message" field containing the exception message
             Map<String, String> response = new HashMap<>();
             response.put("message", ex.getMessage());
 
+            // Convert the map to a JSON string
             String body = JsonUtility.toJson(response);
 
-            if (ex instanceof ApplicationException ignore) {
-                ResponseUtility.sendResponse(exchange, HttpStatus.BAD_REQUEST, ContentType.JSON, body);
-            } else {
-                ResponseUtility.sendResponse(exchange, HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, body);
-            }
-
+            // Send the JSON response with the provided status code and content type
+            ResponseUtility.sendResponse(exchange, statusCode, ContentType.JSON, body);
         } catch (IOException e) {
+            // Wrap IOException as unchecked to propagate it
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Sends the response returned by a controller method.
+     * Handles both Response<T> objects and void/other types.
+     *
+     * @param result   The object returned by the controller method.
+     * @param exchange The HttpExchange object for sending the response.
+     */
     public static void sendResponse(Object result, HttpExchange exchange) {
-
         try {
-
             if (result instanceof Response<?> response) {
+                // If the result is a Response object, delegate to sendResponse
                 ResponseUtility.sendResponse(exchange, response);
             } else {
-
-                // optional: allow void methods too
-                exchange.sendResponseHeaders(204, -1); // No Content
+                // Optional: allow void or unrecognized return types
+                // Send 204 No Content if controller returned nothing meaningful
+                exchange.sendResponseHeaders(204, -1);
                 exchange.close();
             }
         } catch (IOException e) {
+            // Wrap IOException as unchecked to propagate it
             throw new RuntimeException(e);
         }
     }
+
 
     /**
      * Convenience overload using enums
@@ -109,42 +120,59 @@ public final class ResponseUtility {
         }
     }
 
+    /**
+     * Sends a Response<T> back to the client using the HttpExchange.
+     * Supports String, byte[], and JSON bodies automatically.
+     *
+     * @param exchange The HttpExchange object for sending the response.
+     * @param response The Response<T> object containing body, headers, status, and content type.
+     * @param <T>      The type of the response body.
+     */
     public static <T> void sendResponse(HttpExchange exchange, Response<T> response) {
         byte[] bytes;
 
         try {
-            // Convert body to bytes
+            // Convert body to bytes depending on type
             if (response.getBody() == null) {
+                // No body → send empty response
                 bytes = new byte[0];
             } else if (response.getBody() instanceof String s) {
+                // Body is a plain String → convert to UTF-8 bytes
                 bytes = s.getBytes(StandardCharsets.UTF_8);
             } else if (response.getBody() instanceof byte[] b) {
+                // Body is already a byte array → use directly
                 bytes = b;
             } else if (response.getContentType() == ContentType.JSON) {
-
-                // Auto-convert object to JSON
+                // Auto-convert any object to JSON using Jackson ObjectMapper
                 bytes = OBJECT_MAPPER.writeValueAsBytes(response.getBody());
             } else {
+                // Unsupported body type → throw exception
                 throw new IllegalArgumentException(
                         "Unsupported response body type: " + response.getBody().getClass()
                 );
             }
 
-            // Set headers
+            // Set Content-Type header
             exchange.getResponseHeaders().add("Content-Type", response.getContentType().getMimeType());
+
+            // Set any additional custom headers
             for (Map.Entry<String, String> entry : response.getHeaders().entrySet()) {
                 exchange.getResponseHeaders().add(entry.getKey(), entry.getValue());
             }
 
+            // Handle Connection: keep-alive if requested
             if (response.isKeepAlive()) {
                 exchange.getResponseHeaders().add("Connection", "keep-alive");
             }
 
-            // Send headers and body
+            // Send response headers with status code and body length
             exchange.sendResponseHeaders(response.getStatus().getCode(), bytes.length);
+
+            // Write the response body
             exchange.getResponseBody().write(bytes);
 
         } catch (IOException e) {
+            // Log error and attempt to send fallback 500 response
             System.err.println("Error sending response: " + e);
             try {
                 exchange.sendResponseHeaders(500, 0);
@@ -152,6 +180,7 @@ public final class ResponseUtility {
                 System.err.println("Failed to send fallback 500: " + ex);
             }
         } finally {
+            // Ensure exchange is closed to free resources
             try {
                 exchange.close();
             } catch (Exception ignored) {
