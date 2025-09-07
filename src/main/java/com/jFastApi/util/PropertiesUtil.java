@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -19,16 +18,21 @@ public final class PropertiesUtil {
     private static Properties PROPERTIES;
 
     static {
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        if (classLoader == null) {
-            classLoader = PropertiesUtil.class.getClassLoader();
-        }
 
-        try (InputStream is = classLoader.getResourceAsStream(PROPERTIES_FILE_NAME)) {
-            PROPERTIES = new Properties();
-            PROPERTIES.load(is);
-        } catch (IOException ex) {
-            LOGGER.error("Failed to read properties from app.properties file!");
+        try {
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            if (classLoader == null) {
+                classLoader = PropertiesUtil.class.getClassLoader();
+            }
+
+            try (InputStream is = classLoader.getResourceAsStream(PROPERTIES_FILE_NAME)) {
+                PROPERTIES = new Properties();
+                PROPERTIES.load(is);
+            } catch (IOException ex) {
+                LOGGER.error("Failed to read properties from app.properties file!");
+            }
+        } catch (Exception ex) {
+            LOGGER.error("Failed to properties file, error {}", ex.getMessage());
         }
     }
 

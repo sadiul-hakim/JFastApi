@@ -8,6 +8,7 @@ import java.util.Map;
 public final class QueryParamUtil {
 
     public static Map<String, String> parseQuery(String query) {
+
         Map<String, String> map = new HashMap<>();
         if (query == null || query.isEmpty()) return map;
 
