@@ -1,4 +1,4 @@
-package com.jFastApi;
+package com.jFastApi.app;
 
 public final class AppContext {
     private AppContext() {

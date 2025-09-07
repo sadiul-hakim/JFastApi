@@ -1,6 +1,6 @@
 package com.jFastApi.db;
 
-import com.jFastApi.AppContext;
+import com.jFastApi.app.AppContext;
 import com.jFastApi.util.PropertiesUtil;
 import com.jFastApi.util.ReflectionUtility;
 import jakarta.persistence.Entity;
