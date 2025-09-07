@@ -2,8 +2,8 @@ package com.jFastApi;
 
 import com.jFastApi.app.AppContext;
 import com.jFastApi.app.RouteScanner;
-import com.jFastApi.util.BannerUtility;
-import com.jFastApi.util.PropertiesUtil;
+import com.jFastApi.app.util.BannerUtility;
+import com.jFastApi.app.util.PropertiesUtil;
 import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

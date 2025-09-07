@@ -1,4 +1,4 @@
-package com.jFastApi.annotation;
+package com.jFastApi.app.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,8 +1,8 @@
-package com.jFastApi.db;
+package com.jFastApi.app.db;
 
 import com.jFastApi.app.AppContext;
-import com.jFastApi.util.PropertiesUtil;
-import com.jFastApi.util.ReflectionUtility;
+import com.jFastApi.app.util.PropertiesUtil;
+import com.jFastApi.app.util.ReflectionUtility;
 import jakarta.persistence.Entity;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;

@@ -1,4 +1,4 @@
-package com.jFastApi.util;
+package com.jFastApi.app.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

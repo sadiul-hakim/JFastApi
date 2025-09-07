@@ -1,10 +1,10 @@
-package com.jFastApi.util;
+package com.jFastApi.app.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jFastApi.exception.ApplicationException;
-import com.jFastApi.http.Response;
-import com.jFastApi.http.enumeration.ContentType;
-import com.jFastApi.http.enumeration.HttpStatus;
+import com.jFastApi.app.exception.ApplicationException;
+import com.jFastApi.app.http.Response;
+import com.jFastApi.app.http.enumeration.ContentType;
+import com.jFastApi.app.http.enumeration.HttpStatus;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;

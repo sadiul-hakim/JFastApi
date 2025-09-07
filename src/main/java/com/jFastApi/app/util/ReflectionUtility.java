@@ -1,4 +1,4 @@
-package com.jFastApi.util;
+package com.jFastApi.app.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

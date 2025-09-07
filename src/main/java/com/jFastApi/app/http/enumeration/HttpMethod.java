@@ -1,4 +1,4 @@
-package com.jFastApi.http.enumeration;
+package com.jFastApi.app.http.enumeration;
 
 public enum HttpMethod {
     GET,

@@ -1,4 +1,4 @@
-package com.jFastApi.util;
+package com.jFastApi.app.util;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;

@@ -1,6 +1,6 @@
-package com.jFastApi.annotation;
+package com.jFastApi.app.annotation;
 
-import com.jFastApi.http.enumeration.HttpMethod;
+import com.jFastApi.app.http.enumeration.HttpMethod;
 
 import java.lang.annotation.*;
 

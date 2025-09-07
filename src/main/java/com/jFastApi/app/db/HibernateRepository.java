@@ -1,4 +1,4 @@
-package com.jFastApi.db;
+package com.jFastApi.app.db;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
