@@ -194,13 +194,24 @@ The following diagram shows the **request lifecycle** in JFastApi:
 ```mermaid
 flowchart TD
     A[HTTP Request] -->|Received by| B[HttpServer]
-    B -->|Find route| C[RouteRegistry]
+
+    B --> I1["Interceptor preHandle"]
+    I1 -->|Allowed| C[RouteRegistry]
+    I1 -->|Blocked| H[ResponseUtility]
+
     C -->|Get Controller & Method| D[BeanFactory]
     D -->|Resolve Parameters| E[ParameterResolver]
     E -->|Invoke Method| F[Controller Method]
-    F -->|Return Response| G[Response<T>]
+
+    F --> I2["Interceptor postHandle"]
+    I2 -->|Modify/Wrap Response| G[Response<T>]
+
     G -->|Serialize & Send| H[ResponseUtility]
     H -->|Write bytes| B
+
+    %% Exception path
+    B -.-> X["Interceptor onException"] -.-> H
+
 ```
 
 ### Explanation of Flow
