@@ -36,7 +36,7 @@ public final class ReflectionUtility {
         return methods;
     }
 
-    public static List<Class<?>> getAnnotatedClasses(String basePackage, Class<? extends Annotation> annotation) {
+    public static List<Class<?>> findAnnotatedClasses(String basePackage, Class<? extends Annotation> annotation) {
         List<Class<?>> classes = new ArrayList<>();
         try {
             for (Class<?> clazz : getClasses(basePackage)) {

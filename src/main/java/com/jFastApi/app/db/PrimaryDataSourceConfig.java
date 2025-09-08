@@ -65,7 +65,7 @@ public final class PrimaryDataSourceConfig {
             hibernateProperties.forEach(cfg::setProperty);
 
             // Scan for @Entity annotated classes in the base package
-            List<Class<?>> entities = ReflectionUtility.getAnnotatedClasses(AppContext.getBasePackage(), Entity.class);
+            List<Class<?>> entities = ReflectionUtility.findAnnotatedClasses(AppContext.getBasePackage(), Entity.class);
             entities.forEach(cfg::addAnnotatedClass);
 
             // Build the SessionFactory and set it as the default in AppContext

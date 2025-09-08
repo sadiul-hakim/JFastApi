@@ -2,6 +2,7 @@ package com.jFastApi;
 
 import com.jFastApi.app.AppContext;
 import com.jFastApi.app.http.RouteScanner;
+import com.jFastApi.app.http.interceptor.InterceptorScanner;
 import com.jFastApi.app.util.BannerUtility;
 import com.jFastApi.app.util.PropertiesUtil;
 import com.sun.net.httpserver.HttpServer;
@@ -38,6 +39,9 @@ public final class JFastApi {
 
             // Scan base package for controller routes and register them
             RouteScanner.scanAndRegister(AppContext.getBasePackage());
+
+            // Register interceptors
+            InterceptorScanner.scanAndRegister(AppContext.getBasePackage());
 
             // Register dispatcher to handle incoming requests
             RouteScanner.registerDispatcher(server);
