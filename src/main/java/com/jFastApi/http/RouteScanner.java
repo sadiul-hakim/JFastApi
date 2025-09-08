@@ -47,7 +47,7 @@ public class RouteScanner {
 
             // Route handler must not be static (must belong to a controller instance)
             if (Modifier.isStatic(method.getModifiers())) {
-                throw new IllegalArgumentException("Route handler " + method + " must not be static.");
+                throw new ApplicationException("Route handler " + method + " must not be static.");
             }
 
             // Register discovered route into central registry
@@ -118,10 +118,10 @@ public class RouteScanner {
                 Object controllerClass = BeanFactory.getBean(route.controllerClass());
 
                 // Resolve parameters for handler method (query, body, headers, etc.)
-                Object[] args = ParameterResolver.resolve(exchange, route.handlerMethod());
+                Object[] params = ParameterResolver.resolve(exchange, route.handlerMethod());
 
                 // Invoke the controller method with resolved parameters
-                Object result = route.handlerMethod().invoke(controllerClass, args);
+                Object result = route.handlerMethod().invoke(controllerClass, params);
 
                 // Run postHandle
                 for (Interceptor interceptor : interceptors) {

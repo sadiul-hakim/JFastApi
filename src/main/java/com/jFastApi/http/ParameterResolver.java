@@ -28,15 +28,18 @@ public final class ParameterResolver {
      * @throws IOException If reading the request body fails.
      */
     public static Object[] resolve(HttpExchange exchange, Method method) throws IOException {
+
         // Get all parameters of the method
         Parameter[] params = method.getParameters();
-        Object[] args = new Object[params.length];
+        int paramsLength = params.length;
+        Object[] args = new Object[paramsLength];
 
         // Determine HTTP method of the request
         HttpMethod httpMethod = HttpMethod.fromString(exchange.getRequestMethod());
 
         // Loop through all method parameters to resolve their values
-        for (int i = 0; i < params.length; i++) {
+        Map<String, String> query = QueryParamUtil.parseQuery(exchange.getRequestURI().getRawQuery());
+        for (int i = 0; i < paramsLength; i++) {
             Parameter param = params[i];
 
             // Handle @RequestBody: deserialize JSON body to parameter type
@@ -51,8 +54,6 @@ public final class ParameterResolver {
             // Handle @RequestParam: extract value from query parameters
             if (param.isAnnotationPresent(RequestParam.class)) {
                 RequestParam rp = param.getAnnotation(RequestParam.class);
-                Map<String, String> query = QueryParamUtil.parseQuery(exchange.getRequestURI().getRawQuery());
-
                 String value = query.get(rp.name());
                 if (value == null) {
                     // Check if parameter is required or has a default value

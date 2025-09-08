@@ -22,12 +22,12 @@ public final class RouteRegistry {
     /**
      * Registers a new route in the registry.
      *
-     * @param def The Route object containing path, method, and handler info.
+     * @param route The Route object containing path, method, and handler info.
      */
-    public static void register(Route def) {
+    public static void register(Route route) {
         routes
-                .computeIfAbsent(def.path(), k -> new HashMap<>()) // create inner map if path not present
-                .put(def.method(), def); // map HTTP method to the Route
+                .computeIfAbsent(route.path(), k -> new HashMap<>()) // create inner map if path not present
+                .put(route.method(), route); // map HTTP method to the Route
     }
 
     /**

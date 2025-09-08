@@ -21,10 +21,12 @@ public class InterceptorScanner {
      * @param basePackage the root package to scan for interceptor classes
      */
     public static void scanAndRegister(String basePackage) {
+
         // Find all classes annotated with @InterceptorBean in the given package
         List<Class<?>> classes = ReflectionUtility.findAnnotatedClasses(basePackage, InterceptorBean.class);
 
         for (Class<?> clazz : classes) {
+
             // Ensure the discovered class actually implements Interceptor
             if (!Interceptor.class.isAssignableFrom(clazz)) {
                 throw new RuntimeException(clazz + " must implement Interceptor");
