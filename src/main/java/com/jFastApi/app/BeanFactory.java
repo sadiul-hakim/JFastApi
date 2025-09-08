@@ -49,7 +49,7 @@ public class BeanFactory {
         try {
 
             // Only allow classes explicitly marked as @Injectable
-            if (!clazz.isAnnotationPresent(Bean.class) || !clazz.isAnnotationPresent(InterceptorBean.class)) {
+            if (!(clazz.isAnnotationPresent(Bean.class) || clazz.isAnnotationPresent(InterceptorBean.class))) {
                 throw new RuntimeException(
                         "No injectable Bean found for Class " + clazz.getName()
                 );

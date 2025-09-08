@@ -24,7 +24,11 @@ public final class JFastApi {
 
     public static void main(String[] args) {
 
+
         try {
+            // record start time in nanoseconds
+            long startTime = System.nanoTime();
+
             // Read port number from properties
             int port = PropertiesUtil.getPropertyInteger(PORT_NUMBER);
 
@@ -56,6 +60,14 @@ public final class JFastApi {
                 System.out.println("Shutting down server...");
                 server.stop(0);
             }));
+
+            // Measure end time
+            long endTime = System.nanoTime();
+            long elapsedMillis = (endTime - startTime) / 1_000_000;
+            double elapsedSeconds = elapsedMillis / 1000.0;
+
+            // Log startup success
+            LOGGER.info("JFastApi started in {} sec", String.format("%.2f", elapsedSeconds));
 
             // Start HTTP server
             server.start();

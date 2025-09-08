@@ -1,5 +1,6 @@
 package com.jFastApi.source.controller;
 
+import com.jFastApi.app.annotation.Bean;
 import com.jFastApi.app.annotation.HttpRoute;
 import com.jFastApi.app.annotation.RequestBody;
 import com.jFastApi.app.annotation.RequestParam;
@@ -13,6 +14,7 @@ import com.jFastApi.source.service.TodoService;
 import java.util.List;
 import java.util.Map;
 
+@Bean
 public class TodoController {
 
     private final TodoService todoService;
