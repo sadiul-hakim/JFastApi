@@ -53,8 +53,8 @@ public class Response<T> {
     // --- Builder ---
     public static class Builder<T> {
         private T body;
-        private HttpStatus status;
-        private ContentType contentType;
+        private HttpStatus status = HttpStatus.OK;
+        private ContentType contentType = ContentType.JSON;
         private long contentLength;
         private Map<String, String> headers = new HashMap<>();
         private boolean keepAlive = false;

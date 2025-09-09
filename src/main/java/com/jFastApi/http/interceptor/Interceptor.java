@@ -31,5 +31,5 @@ public interface Interceptor {
      * @param ex the exception thrown
      * @return true if exception handled, false to let default error handling run
      */
-    boolean onException(HttpExchange exchange, Route route, Exception ex);
+    boolean onException(HttpExchange exchange, Route route, Throwable ex);
 }

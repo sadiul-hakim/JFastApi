@@ -1,6 +1,7 @@
 package com.jFastApi;
 
 import com.jFastApi.db.PrimaryDataSourceConfig;
+import com.jFastApi.exception.ExceptionHandlerRegistry;
 import com.jFastApi.http.RouteScanner;
 import com.jFastApi.http.interceptor.InterceptorScanner;
 import com.jFastApi.util.BannerUtility;
@@ -48,6 +49,9 @@ public final class JFastApiApplication {
 
             // Register dispatcher to handle incoming requests
             RouteScanner.registerDispatcher(server);
+
+            // Register Exception Handlers
+            ExceptionHandlerRegistry.scanPackage(AppContext.getBasePackage());
 
             // Init Default Database
             PrimaryDataSourceConfig.init();

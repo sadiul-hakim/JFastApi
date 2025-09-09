@@ -3,6 +3,7 @@ package com.jFastApi.http;
 import com.jFastApi.BeanFactory;
 import com.jFastApi.annotation.HttpRoute;
 import com.jFastApi.exception.ApplicationException;
+import com.jFastApi.exception.ExceptionHandlerRegistry;
 import com.jFastApi.http.enumeration.HttpMethod;
 import com.jFastApi.http.enumeration.HttpStatus;
 import com.jFastApi.http.interceptor.Interceptor;
@@ -11,6 +12,7 @@ import com.jFastApi.util.ReflectionUtility;
 import com.jFastApi.util.ResponseUtility;
 import com.sun.net.httpserver.HttpServer;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
@@ -135,23 +137,34 @@ public class RouteScanner {
                 // Known application-level error → return 400
                 ResponseUtility.sendErrorResponse(ex, exchange, HttpStatus.BAD_REQUEST);
 
-            } catch (Exception e) {
-                boolean handled = false;
+            } catch (InvocationTargetException e) {
 
+                boolean handled = false;
+                Throwable targetException = e.getTargetException();
                 for (Interceptor interceptor : interceptors) {
-                    if (interceptor.onException(exchange, route, e)) {
+                    if (interceptor.onException(exchange, route, targetException)) {
                         handled = true;
                         break;
                     }
                 }
 
                 if (!handled) {
-                    ResponseUtility.sendErrorResponse(
-                            new ApplicationException("Internal Server Error"),
-                            exchange,
-                            HttpStatus.INTERNAL_SERVER_ERROR
-                    );
+                    try {
+                        ExceptionHandlerRegistry.handle(targetException, exchange);
+                    } catch (Exception ex) {
+                        ResponseUtility.sendErrorResponse(
+                                new ApplicationException("Internal Server Error"),
+                                exchange,
+                                HttpStatus.INTERNAL_SERVER_ERROR
+                        );
+                    }
                 }
+            } catch (Exception e) {
+                ResponseUtility.sendErrorResponse(
+                        new ApplicationException("Internal Server Error"),
+                        exchange,
+                        HttpStatus.INTERNAL_SERVER_ERROR
+                );
             }
         });
     }
