@@ -33,7 +33,7 @@ public class InterceptorScanner {
             }
 
             // Create the interceptor instance via BeanFactory (DI container)
-            Interceptor interceptor = (Interceptor) BeanFactory.getBean(clazz);
+            Interceptor interceptor = (Interceptor) BeanFactory.getBeanInstance(clazz);
 
             // Register the interceptor globally so it applies to all requests
             InterceptorRegistry.register(interceptor);

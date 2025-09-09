@@ -30,21 +30,22 @@ public final class ExceptionHandlerRegistry {
 
         List<Method> methods = ReflectionUtility.findAnnotatedMethods(basePackage, ExceptionHandler.class);
         for (Method method : methods) {
-            if (method.isAnnotationPresent(ExceptionHandler.class)) {
-                ExceptionHandler ann = method.getAnnotation(ExceptionHandler.class);
-                try {
-                    Object instance = BeanFactory.getBean(method.getDeclaringClass());
-                    for (Class<? extends Exception> exType : ann.exception()) {
-                        registerMethodHandler(exType, instance, method);
-                    }
-                } catch (Exception ignored) {
-                    // could log this if desired
+            if (!method.isAnnotationPresent(ExceptionHandler.class)) {
+                continue;
+            }
+            ExceptionHandler ann = method.getAnnotation(ExceptionHandler.class);
+            try {
+                Object instance = BeanFactory.getBeanInstance(method.getDeclaringClass());
+                for (Class<? extends Throwable> exType : ann.exception()) {
+                    registerMethodHandler(exType, instance, method);
                 }
+            } catch (Exception ignored) {
+                // could log this if desired
             }
         }
     }
 
-    private static void registerMethodHandler(Class<? extends Exception> exType, Object instance, Method method) {
+    private static void registerMethodHandler(Class<? extends Throwable> exType, Object instance, Method method) {
         method.setAccessible(true);
         handlers.put(exType, (ex, exchange) -> {
             try {

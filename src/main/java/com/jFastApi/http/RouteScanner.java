@@ -117,7 +117,7 @@ public class RouteScanner {
                 }
 
                 // Get controller instance from BeanFactory (DI)
-                Object controllerClass = BeanFactory.getBean(route.controllerClass());
+                Object controllerClass = BeanFactory.getBeanInstance(route.controllerClass());
 
                 // Resolve parameters for handler method (query, body, headers, etc.)
                 Object[] params = ParameterResolver.resolve(exchange, route.handlerMethod());

@@ -45,7 +45,7 @@ public class BeanFactory {
      *                          or if bean creation fails.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T getBean(Class<T> clazz) {
+    public static <T> T getBeanInstance(Class<T> clazz) {
         try {
 
             // Only allow classes explicitly marked as @Injectable
@@ -70,7 +70,7 @@ public class BeanFactory {
 
             // Recursively resolve constructor parameters (dependencies)
             Object[] params = Arrays.stream(constructor.getParameterTypes())
-                    .map(BeanFactory::getBean) // recursive call
+                    .map(BeanFactory::getBeanInstance) // recursive call
                     .toArray();
 
             // Create the instance via reflection
