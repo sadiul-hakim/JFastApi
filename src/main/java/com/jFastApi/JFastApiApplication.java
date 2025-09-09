@@ -12,7 +12,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Main entry point for the JFastApi mini REST framework.
@@ -41,20 +45,45 @@ public final class JFastApiApplication {
             // Initialize application context (sets base package for scanning)
             AppContext.initialize(baseClass);
 
-            // Scan base package for controller routes and register them
-            RouteScanner.scanAndRegister(AppContext.getBasePackage());
+            List<Future<?>> initializationTasks = new ArrayList<>();
+            try (var service = Executors.newVirtualThreadPerTaskExecutor()) {
 
-            // Register interceptors
-            InterceptorScanner.scanAndRegister(AppContext.getBasePackage());
+                Future<?> routeTask = service.submit(() -> {
+
+                    // Scan base package for controller routes and register them
+                    RouteScanner.scanAndRegister(AppContext.getBasePackage());
+                });
+                initializationTasks.add(routeTask);
+
+                Future<?> interceptorTask = service.submit(() -> {
+
+                    // Register interceptors
+                    InterceptorScanner.scanAndRegister(AppContext.getBasePackage());
+                });
+                initializationTasks.add(interceptorTask);
+
+                Future<?> exceptionTask = service.submit(() -> {
+
+                    // Register Exception Handlers
+                    ExceptionHandlerRegistry.scanPackage(AppContext.getBasePackage());
+                });
+                initializationTasks.add(exceptionTask);
+
+                // Init Default Database
+                Future<?> dbTask = service.submit(PrimaryDataSourceConfig::init);
+                initializationTasks.add(dbTask);
+            }
+
+            for (Future<?> task : initializationTasks) {
+                try {
+                    task.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException("Failed to register system entities!", e);
+                }
+            }
 
             // Register dispatcher to handle incoming requests
             RouteScanner.registerDispatcher(server);
-
-            // Register Exception Handlers
-            ExceptionHandlerRegistry.scanPackage(AppContext.getBasePackage());
-
-            // Init Default Database
-            PrimaryDataSourceConfig.init();
 
             // Print banner
             String banner = BannerUtility.getBANNER();

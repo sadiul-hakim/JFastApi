@@ -4,6 +4,7 @@ import com.jFastApi.http.enumeration.HttpMethod;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Central registry for all HTTP routes in the application.
@@ -13,7 +14,7 @@ import java.util.Map;
 public final class RouteRegistry {
 
     // Map of path -> (HTTP method -> Route)
-    private static final Map<String, Map<HttpMethod, Route>> routes = new HashMap<>();
+    private static final Map<String, Map<HttpMethod, Route>> routes = new ConcurrentHashMap<>();
 
     // Private constructor to prevent instantiation
     private RouteRegistry() {
