@@ -1,3 +1,5 @@
+<img src="JFastApi.png" alt="Alt text" width="300"/>
+
 # JFastApi
 
 **JFastApi** is a lightweight, annotation-driven Java REST framework designed for simplicity, performance, and developer
