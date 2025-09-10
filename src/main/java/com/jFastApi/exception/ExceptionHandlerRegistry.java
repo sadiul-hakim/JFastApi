@@ -32,14 +32,7 @@ public final class ExceptionHandlerRegistry {
      * Default handler used when no specific handler is registered
      * for a given exception type.
      */
-    private static ExceptionHandlerInvoker defaultHandler;
-
-    /**
-     * Initializes the registry with a default global exception handler.
-     */
-    public ExceptionHandlerRegistry() {
-        defaultHandler = new DefaultGlobalExceptionHandler();
-    }
+    private static ExceptionHandlerInvoker defaultHandler = new DefaultGlobalExceptionHandler();
 
     /**
      * Scans for methods annotated with @ExceptionHandler in the given base package
@@ -47,10 +40,16 @@ public final class ExceptionHandlerRegistry {
      *
      * @param basePackage the package to scan for annotated methods
      */
-    public static void scanPackage(String basePackage) {
+    public static void scanPackage(String basePackage, String internalBasePackage) {
         // Find all methods annotated with @ExceptionHandler
         List<Method> methods = ReflectionUtility.findAnnotatedMethods(basePackage, ExceptionHandler.class);
+        List<Method> internalMethods = ReflectionUtility.findAnnotatedMethods(internalBasePackage, ExceptionHandler.class);
 
+        register(methods);
+        register(internalMethods);
+    }
+
+    private static void register(List<Method> methods) {
         for (Method method : methods) {
             // Double-check annotation presence (defensive programming)
             if (!method.isAnnotationPresent(ExceptionHandler.class)) {

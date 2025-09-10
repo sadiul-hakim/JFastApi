@@ -1,24 +1,20 @@
 package com.jFastApi.controller;
 
 import com.jFastApi.annotation.Bean;
+import com.jFastApi.annotation.ExceptionHandler;
 import com.jFastApi.annotation.HttpRoute;
 import com.jFastApi.annotation.RequestBody;
 import com.jFastApi.enumeration.ContentType;
 import com.jFastApi.enumeration.HttpMethod;
 import com.jFastApi.enumeration.HttpStatus;
-import com.jFastApi.exception.ApplicationException;
 import com.jFastApi.http.Response;
 import com.jFastApi.security.AuthUser;
+import com.jFastApi.security.AuthenticationException;
 import com.jFastApi.security.AuthenticationManager;
 import com.jFastApi.security.AuthenticationToken;
 import com.jFastApi.util.JwtHelper;
 import com.jFastApi.util.PropertiesUtil;
-import com.jFastApi.util.RequestUtility;
-import com.sun.net.httpserver.HttpExchange;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,14 +45,22 @@ public class AuthenticationController {
         String accessToken = jwtHelper.generateToken(authenticate.getUsername(), claims, accessTokenExpiration);
         String refreshToken = jwtHelper.generateToken(authenticate.getUsername(), claims, refreshTokenExpiration);
 
-        Map<String,String> tokens = new HashMap<>(){{
-            put("accessToken",accessToken);
-            put("refreshToken",refreshToken);
+        Map<String, String> tokens = new HashMap<>() {{
+            put("accessToken", accessToken);
+            put("refreshToken", refreshToken);
         }};
         return new Response.Builder<Map<String, String>>()
                 .contentType(ContentType.JSON)
                 .status(HttpStatus.OK)
                 .body(tokens)
+                .build();
+    }
+
+    @ExceptionHandler(exception = {AuthenticationException.class})
+    public Response<Map<String, String>> handleAuthenticationException(AuthenticationException ex) {
+        return new Response.Builder<Map<String, String>>()
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("message", ex.getMessage()))
                 .build();
     }
 }

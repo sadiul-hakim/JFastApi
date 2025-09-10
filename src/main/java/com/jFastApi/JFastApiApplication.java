@@ -48,15 +48,7 @@ public final class JFastApiApplication {
             // Initialize application context (sets base package for scanning)
             AppContext.initialize(baseClass, JFastApiApplication.class);
 
-            initSecurity();
-
-            // Scan base package for controller routes and register them
-            BeanFactory.scanAndRegister(AppContext.getBasePackage(), AppContext.getInternalBasePackage());
-
-            initSystemEntity();
-
-            // Register dispatcher to handle incoming requests
-            RouteScanner.registerDispatcher(server);
+            initSystemEntity(server);
 
             // Print banner
             String banner = BannerUtility.getBANNER();
@@ -110,42 +102,25 @@ public final class JFastApiApplication {
         }
     }
 
-    private static void initSystemEntity() {
-        List<Future<?>> initializationTasks = new ArrayList<>();
-        try (var service = Executors.newVirtualThreadPerTaskExecutor()) {
+    private static void initSystemEntity(HttpServer server) {
 
-            Future<?> routeTask = service.submit(() -> {
+        // Scan base package for controller routes and register them
+        BeanFactory.scanAndRegister(AppContext.getBasePackage(), AppContext.getInternalBasePackage());
 
-                // Scan base package for controller routes and register them
-                RouteScanner.scanAndRegister(AppContext.getBasePackage(), AppContext.getInternalBasePackage());
-            });
-            initializationTasks.add(routeTask);
+        initSecurity();
 
-            Future<?> interceptorTask = service.submit(() -> {
+        PrimaryDataSourceConfig.init();
 
-                // Register interceptors
-                InterceptorScanner.scanAndRegister(AppContext.getBasePackage(), AppContext.getInternalBasePackage());
-            });
-            initializationTasks.add(interceptorTask);
+        // Scan base package for controller routes and register them
+        RouteScanner.scanAndRegister(AppContext.getBasePackage(), AppContext.getInternalBasePackage());
 
-            Future<?> exceptionTask = service.submit(() -> {
+        // Register interceptors
+        InterceptorScanner.scanAndRegister(AppContext.getBasePackage(), AppContext.getInternalBasePackage());
 
-                // Register Exception Handlers
-                ExceptionHandlerRegistry.scanPackage(AppContext.getBasePackage());
-            });
-            initializationTasks.add(exceptionTask);
+        // Register Exception Handlers
+        ExceptionHandlerRegistry.scanPackage(AppContext.getBasePackage(), AppContext.getInternalBasePackage());
 
-            // Init Default Database
-            Future<?> dbTask = service.submit(PrimaryDataSourceConfig::init);
-            initializationTasks.add(dbTask);
-        }
-
-        for (Future<?> task : initializationTasks) {
-            try {
-                task.get();
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException("Failed to register system entities!", e);
-            }
-        }
+        // Register dispatcher to handle incoming requests
+        RouteScanner.registerDispatcher(server);
     }
 }

@@ -13,7 +13,7 @@ class DefaultGlobalExceptionHandler implements ExceptionHandlerInvoker {
 
     @Override
     public void handle(Throwable ex, HttpExchange exchange) {
-        LOGGER.error("Unhandled exception: {}", ex.getMessage(), ex);
+        LOGGER.error("Unhandled exception: {}", ex.getMessage());
 
         try (exchange) {
             String json = "{\"error\":\"" + ex.getMessage() + "\"}";

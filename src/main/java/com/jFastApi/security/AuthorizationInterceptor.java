@@ -1,32 +1,25 @@
 package com.jFastApi.security;
 
 import com.jFastApi.annotation.SystemInterceptorBean;
-import com.jFastApi.enumeration.ContentType;
-import com.jFastApi.enumeration.HttpStatus;
 import com.jFastApi.exception.ForbiddenException;
 import com.jFastApi.http.Route;
 import com.jFastApi.http.interceptor.Interceptor;
 import com.jFastApi.util.JwtHelper;
 import com.jFastApi.util.RequestUtility;
-import com.jFastApi.util.ResponseUtility;
 import com.jFastApi.util.StringUtility;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 @SystemInterceptorBean(order = 1)
 public class AuthorizationInterceptor implements Interceptor {
 
     private final AuthUserService authUserService;
-    private final AuthenticationManager authenticationManager;
     private final JwtHelper jwtHelper;
 
-    public AuthorizationInterceptor(AuthUserService authUserService, AuthenticationManager authenticationManager,
-                                    JwtHelper jwtHelper) {
+    public AuthorizationInterceptor(AuthUserService authUserService,JwtHelper jwtHelper) {
         this.authUserService = authUserService;
-        this.authenticationManager = authenticationManager;
         this.jwtHelper = jwtHelper;
     }
 
@@ -34,7 +27,7 @@ public class AuthorizationInterceptor implements Interceptor {
     public boolean preHandle(HttpExchange exchange, Route route) {
 
         String path = exchange.getRequestURI().getPath();
-        if (path.equals("/login") || !SecurityContext.isEnabled()) {
+        if (path.equals("/login") || !SecurityContext.isEnabled() || route.authorities().isEmpty()) {
             return true;
         }
 
@@ -46,7 +39,10 @@ public class AuthorizationInterceptor implements Interceptor {
         authorization = authorization.substring(7);
         String username = jwtHelper.extractUsername(authorization);
         AuthUser user = authUserService.loadUserByUsername(username);
-        authenticationManager.authenticate(user);
+
+        if(!jwtHelper.isValidToken(authorization,user.getUsername())){
+            throw new AuthenticationException("Unauthorized");
+        }
 
         List<String> authorities = route.authorities();
         if (authorities.isEmpty()) {
