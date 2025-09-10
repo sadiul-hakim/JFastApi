@@ -17,6 +17,8 @@ public final class AppContext {
      */
     private static String basePackage;
 
+    private static String internalBasePackage;
+
     /**
      * Default Hibernate SessionFactory, initialized in PrimaryDataSourceConfig
      */
@@ -32,6 +34,11 @@ public final class AppContext {
         basePackage = mainClass.getPackageName();
     }
 
+    public static void initialize(Class<?> mainClass, Class<?> internalMainClass) {
+        basePackage = mainClass.getPackageName();
+        internalBasePackage = internalMainClass.getPackageName();
+    }
+
     /**
      * Returns the base package of the application.
      *
@@ -39,6 +46,10 @@ public final class AppContext {
      */
     public static String getBasePackage() {
         return basePackage;
+    }
+
+    public static String getInternalBasePackage() {
+        return internalBasePackage;
     }
 
     /**

@@ -15,7 +15,12 @@ public final class JsonUtility {
         return mapper.readValue(input, clazz);
     }
 
-    public static String toJson(Object obj) throws IOException {
-        return mapper.writeValueAsString(obj);
+    public static String toJson(Object obj) {
+
+        try {
+            return mapper.writeValueAsString(obj);
+        } catch (Exception ex) {
+            return "";
+        }
     }
 }

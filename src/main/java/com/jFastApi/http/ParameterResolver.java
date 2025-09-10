@@ -3,9 +3,9 @@ package com.jFastApi.http;
 import com.jFastApi.annotation.RequestBody;
 import com.jFastApi.annotation.RequestParam;
 import com.jFastApi.exception.ApplicationException;
-import com.jFastApi.http.enumeration.HttpMethod;
+import com.jFastApi.enumeration.HttpMethod;
 import com.jFastApi.util.JsonUtility;
-import com.jFastApi.util.QueryParamUtil;
+import com.jFastApi.util.RequestUtility;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
@@ -27,7 +27,7 @@ public final class ParameterResolver {
      * @return An array of objects representing the arguments to pass to the method.
      * @throws IOException If reading the request body fails.
      */
-    public static Object[] resolve(HttpExchange exchange, Method method) throws IOException {
+    static Object[] resolve(HttpExchange exchange, Method method) throws IOException {
 
         // Get all parameters of the method
         Parameter[] params = method.getParameters();
@@ -38,11 +38,16 @@ public final class ParameterResolver {
         HttpMethod httpMethod = HttpMethod.fromString(exchange.getRequestMethod());
 
         // Loop through all method parameters to resolve their values
-        Map<String, String> query = QueryParamUtil.parseQuery(exchange.getRequestURI().getRawQuery());
+        Map<String, String> query = RequestUtility.parseQuery(exchange.getRequestURI().getRawQuery());
         for (int i = 0; i < paramsLength; i++) {
             Parameter param = params[i];
 
             // Handle @RequestBody: deserialize JSON body to parameter type
+            if (param.getType().equals(HttpExchange.class)) {
+                args[i] = exchange;
+                continue;
+            }
+
             if (param.isAnnotationPresent(RequestBody.class)) {
                 if (!httpMethod.equals(HttpMethod.POST) && !httpMethod.equals(HttpMethod.PUT)) {
                     throw new ApplicationException("@RequestBody only allowed for POST/PUT methods");

@@ -51,7 +51,7 @@ public final class ReflectionUtility {
     }
 
     // Scans all classes in a package
-    private static List<Class<?>> getClasses(String packageName) {
+    public static List<Class<?>> getClasses(String packageName) {
 
         List<Class<?>> classes = new ArrayList<>();
         try {
@@ -71,7 +71,7 @@ public final class ReflectionUtility {
         return classes;
     }
 
-    private static List<Class<?>> findClasses(File directory, String packageName) throws ClassNotFoundException {
+    private static List<Class<?>> findClasses(File directory, String packageName) {
 
         List<Class<?>> classes = new ArrayList<>();
 

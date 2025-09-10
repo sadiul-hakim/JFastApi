@@ -2,8 +2,8 @@ package com.jFastApi.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jFastApi.http.Response;
-import com.jFastApi.http.enumeration.ContentType;
-import com.jFastApi.http.enumeration.HttpStatus;
+import com.jFastApi.enumeration.ContentType;
+import com.jFastApi.enumeration.HttpStatus;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
@@ -25,20 +25,15 @@ public final class ResponseUtility {
      * @param statusCode The HTTP status code to send (e.g., 400, 404, 500).
      */
     public static void sendErrorResponse(Exception ex, HttpExchange exchange, HttpStatus statusCode) {
-        try {
-            // Create a simple map with a "message" field containing the exception message
-            Map<String, String> response = new HashMap<>();
-            response.put("message", ex.getMessage());
+        // Create a simple map with a "message" field containing the exception message
+        Map<String, String> response = new HashMap<>();
+        response.put("message", ex.getMessage());
 
-            // Convert the map to a JSON string
-            String body = JsonUtility.toJson(response);
+        // Convert the map to a JSON string
+        String body = JsonUtility.toJson(response);
 
-            // Send the JSON response with the provided status code and content type
-            ResponseUtility.sendResponse(exchange, statusCode, ContentType.JSON, body);
-        } catch (IOException e) {
-            // Wrap IOException as unchecked to propagate it
-            throw new RuntimeException(e);
-        }
+        // Send the JSON response with the provided status code and content type
+        ResponseUtility.sendResponse(exchange, statusCode, ContentType.JSON, body);
     }
 
     /**
@@ -71,6 +66,11 @@ public final class ResponseUtility {
      */
     public static void sendResponse(HttpExchange exchange, HttpStatus status, ContentType contentType, String body) {
         sendResponse(exchange, status.getCode(), contentType.getMimeType(), body);
+    }
+
+    public static void sendResponse(HttpExchange exchange, HttpStatus status, ContentType contentType, Object body) {
+        String json = JsonUtility.toJson(body);
+        sendResponse(exchange, status.getCode(), contentType.getMimeType(), json);
     }
 
     /**

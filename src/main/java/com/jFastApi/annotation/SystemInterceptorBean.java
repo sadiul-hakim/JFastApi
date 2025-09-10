@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface InterceptorBean {
+public @interface SystemInterceptorBean { // TODO : client should not see this
     int order() default 0;
 }
 

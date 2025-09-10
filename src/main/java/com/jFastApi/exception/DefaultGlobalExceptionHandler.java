@@ -1,13 +1,13 @@
 package com.jFastApi.exception;
 
-import com.jFastApi.http.enumeration.ContentType;
-import com.jFastApi.http.enumeration.HttpStatus;
+import com.jFastApi.enumeration.ContentType;
+import com.jFastApi.enumeration.HttpStatus;
 import com.jFastApi.util.ResponseUtility;
 import com.sun.net.httpserver.HttpExchange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DefaultGlobalExceptionHandler implements ExceptionHandlerInvoker {
+class DefaultGlobalExceptionHandler implements ExceptionHandlerInvoker {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultGlobalExceptionHandler.class);
 

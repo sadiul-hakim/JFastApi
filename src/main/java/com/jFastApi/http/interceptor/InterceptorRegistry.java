@@ -1,16 +1,23 @@
 package com.jFastApi.http.interceptor;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.*;
 
 public class InterceptorRegistry {
-    private static final List<Interceptor> interceptors = new CopyOnWriteArrayList<>();
+    private static final NavigableMap<Integer, Interceptor> interceptors = new TreeMap<>();
+    private static final NavigableMap<Integer, Interceptor> systemInterceptors = new TreeMap<>();
 
-    public static void register(Interceptor interceptor) {
-        interceptors.add(interceptor);
+    static void register(int order, Interceptor interceptor) {
+        interceptors.put(order, interceptor);
     }
 
-    public static List<Interceptor> getInterceptors() {
-        return interceptors;
+    static void registerSystemInterceptor(int order, Interceptor interceptor) {
+        systemInterceptors.put(order, interceptor);
+    }
+
+    public static Collection<Interceptor> getInterceptors() {
+        List<Interceptor> all = new ArrayList<>();
+        all.addAll(systemInterceptors.values());
+        all.addAll(interceptors.values());
+        return all;
     }
 }

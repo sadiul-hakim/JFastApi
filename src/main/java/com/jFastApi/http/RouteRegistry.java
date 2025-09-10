@@ -1,9 +1,11 @@
 package com.jFastApi.http;
 
-import com.jFastApi.http.enumeration.HttpMethod;
+import com.jFastApi.enumeration.HttpMethod;
+import com.jFastApi.security.RoutePermission;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -11,10 +13,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * Stores mappings from path -> (HTTP method -> Route handler).
  * Provides lookup methods for request dispatching.
  */
-public final class RouteRegistry {
+final class RouteRegistry {
 
     // Map of path -> (HTTP method -> Route)
     private static final Map<String, Map<HttpMethod, Route>> routes = new ConcurrentHashMap<>();
+
+    // New: route permissions map
+    private static final Map<Route, RoutePermission> permissions = new ConcurrentHashMap<>();
 
     // Private constructor to prevent instantiation
     private RouteRegistry() {
@@ -25,10 +30,22 @@ public final class RouteRegistry {
      *
      * @param route The Route object containing path, method, and handler info.
      */
-    public static void register(Route route) {
+    static void register(Route route) {
         routes
                 .computeIfAbsent(route.path(), k -> new HashMap<>()) // create inner map if path not present
                 .put(route.method(), route); // map HTTP method to the Route
+    }
+
+    public static void register(Route route, String[] roles) {
+        register(route);
+        RoutePermission perm = roles.length == 0
+                ? RoutePermission.publicRoute()
+                : RoutePermission.restricted(Set.of(roles));
+        permissions.put(route, perm);
+    }
+
+    public static RoutePermission findPermission(Route route) {
+        return permissions.getOrDefault(route, RoutePermission.publicRoute());
     }
 
     /**
@@ -38,7 +55,7 @@ public final class RouteRegistry {
      * @param method The HTTP method (GET, POST, etc.).
      * @return The Route object if found, or null if not registered.
      */
-    public static Route find(String path, HttpMethod method) {
+    static Route find(String path, HttpMethod method) {
         Map<HttpMethod, Route> methodMap = routes.get(path);
         if (methodMap == null) return null; // path not found
         return methodMap.get(method); // return route for method or null
@@ -51,7 +68,7 @@ public final class RouteRegistry {
      * @param path The request path to check.
      * @return True if the path exists in the registry, false otherwise.
      */
-    public static boolean hasPath(String path) {
+    static boolean hasPath(String path) {
         return routes.containsKey(path);
     }
 }

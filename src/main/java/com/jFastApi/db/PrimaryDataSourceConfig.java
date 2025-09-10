@@ -25,17 +25,8 @@ public final class PrimaryDataSourceConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PrimaryDataSourceConfig.class);
 
-    // Property keys for datasource
-    private static final String URL = "app.datasource.url";
-    private static final String USERNAME = "app.datasource.username";
-    private static final String PASSWORD = "app.datasource.password";
-    private static final String DRIVER = "app.datasource.driver-class-name";
-
     // Prefix for hibernate-specific properties in app.properties
-    private static final String HIBERNATE_PROPERTIES_PREFIX = "app.datasource.hibernate.";
     private static final String HIBERNATE_PROPERTIES_KEY = "hibernate";
-
-    private static final String HIKARI_PROPERTIES_PREFIX = "app.datasource.hikari.";
     private static final String HIKARI_PROPERTIES_KEY = "hikari.";
 
     // Hibernate property keys
@@ -49,36 +40,36 @@ public final class PrimaryDataSourceConfig {
     private static final String HIBERNATE_CONNECTION_PROVIDER_CLASS_VALUE = "org.hibernate.hikaricp.internal.HikariCPConnectionProvider";
 
     // HikariCP default settings for Hibernate
-    public static final String HIBERNATE_HIKARI_MAXIMUM_POOL_SIZE = "hibernate.hikari.maximumPoolSize";
-    public static final String HIBERNATE_HIKARI_MINIMUM_IDLE = "hibernate.hikari.minimumIdle";
-    public static final String HIBERNATE_HIKARI_IDLE_TIMEOUT = "hibernate.hikari.idleTimeout";
-    public static final String HIBERNATE_HIKARI_MAX_LIFETIME = "hibernate.hikari.maxLifetime";
-    public static final String HIBERNATE_HIKARI_CONNECTION_TIMEOUT = "hibernate.hikari.connectionTimeout";
+    private static final String HIBERNATE_HIKARI_MAXIMUM_POOL_SIZE = "hibernate.hikari.maximumPoolSize";
+    private static final String HIBERNATE_HIKARI_MINIMUM_IDLE = "hibernate.hikari.minimumIdle";
+    private static final String HIBERNATE_HIKARI_IDLE_TIMEOUT = "hibernate.hikari.idleTimeout";
+    private static final String HIBERNATE_HIKARI_MAX_LIFETIME = "hibernate.hikari.maxLifetime";
+    private static final String HIBERNATE_HIKARI_CONNECTION_TIMEOUT = "hibernate.hikari.connectionTimeout";
 
     // Default values
-    public static final String HIBERNATE_HIKARI_MAXIMUM_POOL_SIZE_VALUE = "10";
-    public static final String HIBERNATE_HIKARI_MINIMUM_IDLE_VALUE = "2";
-    public static final String HIBERNATE_HIKARI_IDLE_TIMEOUT_VALUE = "60000";
-    public static final String HIBERNATE_HIKARI_MAX_LIFETIME_VALUE = "1800000";
-    public static final String HIBERNATE_HIKARI_CONNECTION_TIMEOUT_VALUE = "30000";
+    private static final String HIBERNATE_HIKARI_MAXIMUM_POOL_SIZE_VALUE = "10";
+    private static final String HIBERNATE_HIKARI_MINIMUM_IDLE_VALUE = "2";
+    private static final String HIBERNATE_HIKARI_IDLE_TIMEOUT_VALUE = "60000";
+    private static final String HIBERNATE_HIKARI_MAX_LIFETIME_VALUE = "1800000";
+    private static final String HIBERNATE_HIKARI_CONNECTION_TIMEOUT_VALUE = "30000";
 
     public static void init() {
         try {
             // Load all Hibernate properties from app.properties starting with the prefix
             Map<String, String> hibernateProperties = PropertiesUtil.getAllByPrefix(
-                    HIBERNATE_PROPERTIES_PREFIX, HIBERNATE_PROPERTIES_KEY
+                    PropertiesUtil.HIBERNATE_PROPERTIES_PREFIX, HIBERNATE_PROPERTIES_KEY
             );
 
             // Load Hikari properties (dynamic)
             Map<String, String> hikariProperties = PropertiesUtil.getAllByPrefix(
-                    HIKARI_PROPERTIES_PREFIX, HIKARI_PROPERTIES_KEY
+                    PropertiesUtil.HIKARI_PROPERTIES_PREFIX, HIKARI_PROPERTIES_KEY
             );
 
             // Load basic datasource properties
-            String uri = PropertiesUtil.getProperty(URL);
-            String username = PropertiesUtil.getProperty(USERNAME);
-            String password = PropertiesUtil.getProperty(PASSWORD);
-            String driver = PropertiesUtil.getProperty(DRIVER);
+            String uri = PropertiesUtil.getProperty(PropertiesUtil.URL);
+            String username = PropertiesUtil.getProperty(PropertiesUtil.USERNAME);
+            String password = PropertiesUtil.getProperty(PropertiesUtil.PASSWORD);
+            String driver = PropertiesUtil.getProperty(PropertiesUtil.DRIVER);
 
             // Validate required properties
             if (StringUtility.isEmpty(uri) || StringUtility.isEmpty(driver)) {

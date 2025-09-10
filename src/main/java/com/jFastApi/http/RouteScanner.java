@@ -4,18 +4,21 @@ import com.jFastApi.BeanFactory;
 import com.jFastApi.annotation.HttpRoute;
 import com.jFastApi.exception.ApplicationException;
 import com.jFastApi.exception.ExceptionHandlerRegistry;
-import com.jFastApi.http.enumeration.HttpMethod;
-import com.jFastApi.http.enumeration.HttpStatus;
+import com.jFastApi.enumeration.HttpMethod;
+import com.jFastApi.enumeration.HttpStatus;
+import com.jFastApi.exception.ForbiddenException;
+import com.jFastApi.exception.UnauthorizedException;
 import com.jFastApi.http.interceptor.Interceptor;
 import com.jFastApi.http.interceptor.InterceptorRegistry;
-import com.jFastApi.util.ReflectionUtility;
-import com.jFastApi.util.ResponseUtility;
+import com.jFastApi.security.AuthenticationException;
+import com.jFastApi.util.*;
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.List;
+import java.util.*;
 
 /**
  * RouteScanner is responsible for discovering and registering HTTP route handlers.
@@ -34,9 +37,16 @@ public class RouteScanner {
      *
      * @param basePackage The root package to scan for route handler methods.
      */
-    public static void scanAndRegister(String basePackage) {
+    public static void scanAndRegister(String basePackage, String internalBasePackage) {
         // Find all methods annotated with @HttpRoute in the package
         List<Method> methods = ReflectionUtility.findAnnotatedMethods(basePackage, HttpRoute.class);
+        List<Method> internalMethod = ReflectionUtility.findAnnotatedMethods(internalBasePackage, HttpRoute.class);
+
+        registerRoutes(methods);
+        registerRoutes(internalMethod);
+    }
+
+    private static void registerRoutes(List<Method> methods) {
 
         for (Method method : methods) {
             // Double-check method is actually annotated (safety check)
@@ -57,7 +67,8 @@ public class RouteScanner {
                     route.path(),              // Path (e.g., "/users")
                     route.method(),            // HTTP method (GET, POST, etc.)
                     method,                    // Handler method reference
-                    method.getDeclaringClass() // Controller class that owns the method
+                    method.getDeclaringClass(), // Controller class that owns the method
+                    Arrays.asList(route.roles())
             ));
         }
     }
@@ -75,97 +86,110 @@ public class RouteScanner {
     public static void registerDispatcher(HttpServer server) {
 
         // Attach a handler for all paths ("root" dispatcher)
-        server.createContext("/", exchange -> {
+        server.createContext("/", RouteScanner::handleRootEndpoint);
+    }
 
-            // Get registered interceptors
-            List<Interceptor> interceptors = InterceptorRegistry.getInterceptors();
+    private static void handleRootEndpoint(HttpExchange exchange) {
 
-            Route route = null; // declare here so it's visible in catch blocks
+        // Get registered interceptors
+        Collection<Interceptor> interceptors = InterceptorRegistry.getInterceptors();
 
-            try {
-                // Extract path and method from incoming request
-                String path = exchange.getRequestURI().getPath();
-                HttpMethod httpMethod = HttpMethod.fromString(exchange.getRequestMethod());
+        Route route = null; // declare here so it's visible in catch blocks
 
-                // Look up matching route from registry
-                route = RouteRegistry.find(path, httpMethod);
+        try {
+            // Extract path and method from incoming request
+            String path = exchange.getRequestURI().getPath();
+            HttpMethod httpMethod = HttpMethod.fromString(exchange.getRequestMethod());
 
-                if (route == null) {
-                    if (RouteRegistry.hasPath(path)) {
-                        // Path exists but method is not allowed (405)
-                        ResponseUtility.sendErrorResponse(
-                                new ApplicationException("Method Not Allowed"),
-                                exchange,
-                                HttpStatus.METHOD_NOT_ALLOWED
-                        );
-                    } else {
-                        // Path does not exist at all (404)
-                        ResponseUtility.sendErrorResponse(
-                                new ApplicationException("Not Found"),
-                                exchange,
-                                HttpStatus.NOT_FOUND
-                        );
-                    }
-                    return;
+            // Look up matching route from registry
+            route = RouteRegistry.find(path, httpMethod);
+
+            if (route == null) {
+                if (RouteRegistry.hasPath(path)) {
+                    // Path exists but method is not allowed (405)
+                    ResponseUtility.sendErrorResponse(
+                            new ApplicationException("Method Not Allowed"),
+                            exchange,
+                            HttpStatus.METHOD_NOT_ALLOWED
+                    );
+                } else {
+                    // Path does not exist at all (404)
+                    ResponseUtility.sendErrorResponse(
+                            new ApplicationException("Not Found"),
+                            exchange,
+                            HttpStatus.NOT_FOUND
+                    );
                 }
-
-                // Run preHandle
-                for (Interceptor interceptor : interceptors) {
-                    if (!interceptor.preHandle(exchange, route)) {
-                        return; // stop if interceptor blocks request
-                    }
-                }
-
-                // Get controller instance from BeanFactory (DI)
-                Object controllerClass = BeanFactory.getBeanInstance(route.controllerClass());
-
-                // Resolve parameters for handler method (query, body, headers, etc.)
-                Object[] params = ParameterResolver.resolve(exchange, route.handlerMethod());
-
-                // Invoke the controller method with resolved parameters
-                Object result = route.handlerMethod().invoke(controllerClass, params);
-
-                // Run postHandle
-                for (Interceptor interceptor : interceptors) {
-                    result = interceptor.postHandle(exchange, route, result);
-                }
-
-                // Send the method's return value as HTTP response
-                ResponseUtility.sendResponse(result, exchange);
-
-            } catch (ApplicationException ex) {
-                // Known application-level error → return 400
-                ResponseUtility.sendErrorResponse(ex, exchange, HttpStatus.BAD_REQUEST);
-
-            } catch (InvocationTargetException e) {
-
-                boolean handled = false;
-                Throwable targetException = e.getTargetException();
-                for (Interceptor interceptor : interceptors) {
-                    if (interceptor.onException(exchange, route, targetException)) {
-                        handled = true;
-                        break;
-                    }
-                }
-
-                if (!handled) {
-                    try {
-                        ExceptionHandlerRegistry.handle(targetException, exchange);
-                    } catch (Exception ex) {
-                        ResponseUtility.sendErrorResponse(
-                                new ApplicationException("Internal Server Error"),
-                                exchange,
-                                HttpStatus.INTERNAL_SERVER_ERROR
-                        );
-                    }
-                }
-            } catch (Exception e) {
-                ResponseUtility.sendErrorResponse(
-                        new ApplicationException("Internal Server Error"),
-                        exchange,
-                        HttpStatus.INTERNAL_SERVER_ERROR
-                );
+                return;
             }
-        });
+
+            // Run preHandle
+            for (Interceptor interceptor : interceptors) {
+                if (!interceptor.preHandle(exchange, route)) {
+                    return; // stop if interceptor blocks request
+                }
+            }
+
+            // Get controller instance from BeanFactory (DI)
+            Object controllerClass = BeanFactory.getBeanInstance(route.controllerClass());
+
+            // Resolve parameters for handler method (query, body, headers, etc.)
+            Object[] params = ParameterResolver.resolve(exchange, route.handlerMethod());
+
+            // Invoke the controller method with resolved parameters
+            Object result = route.handlerMethod().invoke(controllerClass, params);
+
+            // Run postHandle
+            for (Interceptor interceptor : interceptors) {
+                result = interceptor.postHandle(exchange, route, result);
+            }
+
+            // Send the method's return value as HTTP response
+            ResponseUtility.sendResponse(result, exchange);
+
+        } catch (ApplicationException ex) {
+
+            // Known application-level error → return 400
+            ResponseUtility.sendErrorResponse(ex, exchange, HttpStatus.BAD_REQUEST);
+
+        } catch (ForbiddenException ex) {
+
+            // Known application-level error → return 400
+            ResponseUtility.sendErrorResponse(ex, exchange, HttpStatus.FORBIDDEN);
+
+        } catch (UnauthorizedException | AuthenticationException ex) {
+
+            // Known application-level error → return 400
+            ResponseUtility.sendErrorResponse(ex, exchange, HttpStatus.UNAUTHORIZED);
+
+        } catch (InvocationTargetException e) {
+
+            boolean handled = false;
+            Throwable targetException = e.getTargetException();
+            for (Interceptor interceptor : interceptors) {
+                if (interceptor.onException(exchange, route, targetException)) {
+                    handled = true;
+                    break;
+                }
+            }
+
+            if (!handled) {
+                try {
+                    ExceptionHandlerRegistry.handle(targetException, exchange);
+                } catch (Exception ex) {
+                    ResponseUtility.sendErrorResponse(
+                            new ApplicationException("Internal Server Error"),
+                            exchange,
+                            HttpStatus.INTERNAL_SERVER_ERROR
+                    );
+                }
+            }
+        } catch (Exception e) {
+            ResponseUtility.sendErrorResponse(
+                    new ApplicationException("Internal Server Error"),
+                    exchange,
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }

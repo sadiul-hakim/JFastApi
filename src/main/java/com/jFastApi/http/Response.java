@@ -1,7 +1,7 @@
 package com.jFastApi.http;
 
-import com.jFastApi.http.enumeration.ContentType;
-import com.jFastApi.http.enumeration.HttpStatus;
+import com.jFastApi.enumeration.ContentType;
+import com.jFastApi.enumeration.HttpStatus;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;

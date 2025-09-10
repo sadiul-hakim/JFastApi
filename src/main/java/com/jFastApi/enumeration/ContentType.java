@@ -1,4 +1,4 @@
-package com.jFastApi.http.enumeration;
+package com.jFastApi.enumeration;
 
 public enum ContentType {
     JSON("application/json"),

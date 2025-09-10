@@ -1,5 +1,6 @@
 package com.jFastApi.util;
 
+import com.jFastApi.annotation.Bean;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -10,21 +11,26 @@ import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
 
+@Bean
 public class JwtHelper {
-    private static final String SECRET = "VxRfBGJFviiO62cg/M0YY5WypcyvtUUjfkI5aDJgwt4dLz6BQKuaKChKyn+Ulhz+";
+    private final SecretKey key;
 
-    public static String generateToken(String username, Map<String, Object> extraClaims, long expirationDate) {
+    public JwtHelper(String secret) {
+        this.key = getSecretKey(secret);
+    }
+
+    public String generateToken(String username, Map<String, Object> extraClaims, long expirationDate) {
         JwtBuilder builder = Jwts.builder()
                 .claims(extraClaims)
                 .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationDate))
-                .signWith(getSecretKey());
+                .signWith(key);
 
         return builder.compact();
     }
 
-    public static boolean isValidToken(String token, String username) throws MalformedJwtException {
+    public boolean isValidToken(String token, String username) throws MalformedJwtException {
 
         boolean isValid = extractUsername(token).equalsIgnoreCase(username) && !isExpired(token);
         if (!isValid) {
@@ -33,45 +39,45 @@ public class JwtHelper {
         return true;
     }
 
-    private static boolean isExpired(String token) {
+    private boolean isExpired(String token) {
 
         return extractExpiration(token).before(new Date());
     }
 
-    private static Date extractExpiration(String token) throws MalformedJwtException {
+    private Date extractExpiration(String token) throws MalformedJwtException {
 
         return parseSingleClaim(token, Claims::getExpiration);
     }
 
-    public static String extractUsername(String token) throws ExpiredJwtException, UnsupportedJwtException,
+    public String extractUsername(String token) throws ExpiredJwtException, UnsupportedJwtException,
             MalformedJwtException, SignatureException, IllegalArgumentException {
 
         return parseSingleClaim(token, Claims::getSubject);
     }
 
-    public static Object extractClaim(String token, String claim) throws MalformedJwtException {
+    public Object extractClaim(String token, String claim) throws MalformedJwtException {
 
         return parseSingleClaim(token, claims -> claims.get(claim, Object.class));
     }
 
-    private static <T> T parseSingleClaim(String token, Function<Claims, T> resolver) throws ExpiredJwtException,
+    private <T> T parseSingleClaim(String token, Function<Claims, T> resolver) throws ExpiredJwtException,
             UnsupportedJwtException, MalformedJwtException, SignatureException, IllegalArgumentException {
 
         Claims claims = extractAllClaims(token);
         return resolver.apply(claims);
     }
 
-    private static Claims extractAllClaims(String token) throws ExpiredJwtException, UnsupportedJwtException,
+    private Claims extractAllClaims(String token) throws ExpiredJwtException, UnsupportedJwtException,
             MalformedJwtException, SignatureException, IllegalArgumentException {
 
         JwtParser parser = Jwts.parser()
-                .verifyWith(getSecretKey()).build();
+                .verifyWith(key).build();
         return parser.parseSignedClaims(token).getPayload();
     }
 
-    private static SecretKey getSecretKey() {
+    private SecretKey getSecretKey(String secret) {
 
-        byte[] bytes = Decoders.BASE64.decode(SECRET);
+        byte[] bytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(bytes);
     }
 }

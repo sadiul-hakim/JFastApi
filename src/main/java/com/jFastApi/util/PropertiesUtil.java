@@ -17,6 +17,21 @@ public final class PropertiesUtil {
     private static final String PROPERTIES_FILE_NAME = "app.properties";
     private static Properties PROPERTIES;
 
+    public static final String PORT_NUMBER = "port.number"; // Key in app.properties
+
+    // Property keys for datasource
+    public static final String URL = "app.datasource.url";
+    public static final String USERNAME = "app.datasource.username";
+    public static final String PASSWORD = "app.datasource.password";
+    public static final String DRIVER = "app.datasource.driver-class-name";
+    public static final String HIBERNATE_PROPERTIES_PREFIX = "app.datasource.hibernate.";
+    public static final String HIKARI_PROPERTIES_PREFIX = "app.datasource.hikari.";
+
+    public static final String SECURITY_ENABLE = "app.security.enable";
+    public static final String SECURITY_SECRET_KEY = "app.security.secret_key";
+    public static final String SECURITY_ACCESS_TOKEN_TIMEOUT = "app.security.access_token.timeout";
+    public static final String SECURITY_REFRESH_TOKEN_TIMEOUT = "app.security.refresh_token.timeout";
+
     static {
 
         try {
@@ -57,6 +72,18 @@ public final class PropertiesUtil {
             return Integer.parseInt(property);
         } catch (NumberFormatException ex) {
             LOGGER.error("Failed to parse {} into integer", property);
+        }
+
+        return defaultValue;
+    }
+
+    public static boolean getPropertyBoolean(String key, boolean defaultValue) {
+        String property = PROPERTIES.getProperty(key);
+
+        try {
+            return Boolean.parseBoolean(property);
+        } catch (NumberFormatException ex) {
+            LOGGER.error("Failed to parse {} into boolean", property);
         }
 
         return defaultValue;
