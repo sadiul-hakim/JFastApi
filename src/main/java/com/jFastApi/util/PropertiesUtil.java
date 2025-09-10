@@ -50,6 +50,18 @@ public final class PropertiesUtil {
         }
     }
 
+    public static int getPropertyInteger(String key, int defaultValue) {
+        String property = PROPERTIES.getProperty(key);
+
+        try {
+            return Integer.parseInt(property);
+        } catch (NumberFormatException ex) {
+            LOGGER.error("Failed to parse {} into integer", property);
+        }
+
+        return defaultValue;
+    }
+
     public static Map<String, String> getAllByPrefix(String prefix, String propertyKey) {
         Map<String, String> result = new HashMap<>();
 

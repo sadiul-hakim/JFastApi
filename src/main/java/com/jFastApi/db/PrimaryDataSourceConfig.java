@@ -4,6 +4,7 @@ import com.jFastApi.AppContext;
 import com.jFastApi.exception.ApplicationException;
 import com.jFastApi.util.PropertiesUtil;
 import com.jFastApi.util.ReflectionUtility;
+import com.jFastApi.util.StringUtility;
 import jakarta.persistence.Entity;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -80,8 +81,16 @@ public final class PrimaryDataSourceConfig {
             String driver = PropertiesUtil.getProperty(DRIVER);
 
             // Validate required properties
-            if (uri == null || driver == null) {
-                throw new ApplicationException("Database not configured. Missing URL or driver-class-name.");
+            if (StringUtility.isEmpty(uri) || StringUtility.isEmpty(driver)) {
+                LOGGER.warn("No database configuration found. Falling back to in-memory H2 database. " +
+                        "This is NOT recommended for production use.");
+
+                uri = "jdbc:h2:mem:jfastapi;DB_CLOSE_DELAY=-1;MODE=PostgreSQL";
+                driver = "org.h2.Driver";
+                username = "sa";
+                password = "";
+
+                LOGGER.info("H2 Database configured at jdbc:h2:mem:jfastapi;DB_CLOSE_DELAY=-1;MODE=PostgreSQL");
             }
 
             // Try loading the JDBC driver explicitly
@@ -100,8 +109,8 @@ public final class PrimaryDataSourceConfig {
             // Required JDBC connection settings
             cfg.setProperty(HIBERNATE_DRIVER_CLASSNAME, driver);
             cfg.setProperty(HIBERNATE_URL, uri);
-            cfg.setProperty(HIBERNATE_USERNAME, username != null ? username : "");
-            cfg.setProperty(HIBERNATE_PASSWORD, password != null ? password : "");
+            cfg.setProperty(HIBERNATE_USERNAME, !StringUtility.isEmpty(username) ? username : "");
+            cfg.setProperty(HIBERNATE_PASSWORD, !StringUtility.isEmpty(password) ? password : "");
 
             // Apply any additional Hibernate settings from properties
             hibernateProperties.forEach(cfg::setProperty);
@@ -127,7 +136,8 @@ public final class PrimaryDataSourceConfig {
             SessionFactory sessionFactory = cfg.buildSessionFactory();
             AppContext.setDefaultSessionFactory(sessionFactory);
 
-            LOGGER.info("Hibernate SessionFactory initialized successfully.");
+            LOGGER.info("Hibernate SessionFactory initialized successfully using {}",
+                    driver.contains("h2") ? "in-memory H2" : "configured database");
 
         } catch (Exception ex) {
             LOGGER.error("Failed to initialize Default SessionFactory", ex);

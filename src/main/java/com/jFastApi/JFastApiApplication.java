@@ -34,7 +34,7 @@ public final class JFastApiApplication {
             long startTime = System.nanoTime();
 
             // Read port number from properties
-            int port = PropertiesUtil.getPropertyInteger(PORT_NUMBER);
+            int port = PropertiesUtil.getPropertyInteger(PORT_NUMBER, 8085);
 
             // Create HTTP server bound to the port
             HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
