@@ -45,4 +45,25 @@ public final class RequestUtility {
         }
         return null; // header not present
     }
+
+    /**
+     * Get a trustable client IP address.
+     * Checks "X-Forwarded-For" first (if behind proxy),
+     * falls back to direct connection if header is missing.
+     */
+    public static String getClientIp(HttpExchange exchange) {
+        // Check common proxy header
+        String ip = exchange.getRequestHeaders().getFirst("X-Forwarded-For");
+        if (ip != null && !ip.isBlank()) {
+            // X-Forwarded-For may contain multiple IPs, client is the first
+            return ip.split(",")[0].trim();
+        }
+
+        // Fallback to direct connection
+        if (exchange.getRemoteAddress() != null && exchange.getRemoteAddress().getAddress() != null) {
+            return exchange.getRemoteAddress().getAddress().getHostAddress();
+        }
+
+        return "unknown";
+    }
 }

@@ -2,16 +2,14 @@ package com.jFastApi.http;
 
 import com.jFastApi.BeanFactory;
 import com.jFastApi.annotation.HttpRoute;
-import com.jFastApi.exception.ApplicationException;
-import com.jFastApi.exception.ExceptionHandlerRegistry;
 import com.jFastApi.enumeration.HttpMethod;
 import com.jFastApi.enumeration.HttpStatus;
-import com.jFastApi.exception.ForbiddenException;
-import com.jFastApi.exception.UnauthorizedException;
+import com.jFastApi.exception.*;
 import com.jFastApi.http.interceptor.Interceptor;
 import com.jFastApi.http.interceptor.InterceptorRegistry;
 import com.jFastApi.security.AuthenticationException;
-import com.jFastApi.util.*;
+import com.jFastApi.util.ReflectionUtility;
+import com.jFastApi.util.ResponseUtility;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -19,7 +17,9 @@ import io.jsonwebtoken.ExpiredJwtException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * RouteScanner is responsible for discovering and registering HTTP route handlers.
@@ -50,6 +50,7 @@ public class RouteScanner {
     private static void registerRoutes(List<Method> methods) {
 
         for (Method method : methods) {
+
             // Double-check method is actually annotated (safety check)
             if (!method.isAnnotationPresent(HttpRoute.class)) {
                 continue;
@@ -70,7 +71,11 @@ public class RouteScanner {
                     method,                    // Handler method reference
                     method.getDeclaringClass(), // Controller class that owns the method
                     Arrays.asList(route.roles()),
-                    route.roles().length > 0 || route.authorized()
+                    route.roles().length > 0 || route.authorized(),
+                    route.limit(),
+                    route.timeUnit(),
+                    route.time(),
+                    route.disableRateLimiter()
             ));
         }
     }
@@ -149,6 +154,9 @@ public class RouteScanner {
             // Send the method's return value as HTTP response
             ResponseUtility.sendResponse(result, exchange);
 
+        } catch (TooManyRequestException ex) {
+
+            ResponseUtility.sendErrorResponse(ex, exchange, HttpStatus.FORBIDDEN);
         } catch (ApplicationException ex) {
 
             // Known application-level error → return 400

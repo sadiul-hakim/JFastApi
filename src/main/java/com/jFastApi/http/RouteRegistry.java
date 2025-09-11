@@ -1,11 +1,9 @@
 package com.jFastApi.http;
 
 import com.jFastApi.enumeration.HttpMethod;
-import com.jFastApi.security.RoutePermission;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -17,9 +15,6 @@ final class RouteRegistry {
 
     // Map of path -> (HTTP method -> Route)
     private static final Map<String, Map<HttpMethod, Route>> routes = new ConcurrentHashMap<>();
-
-    // New: route permissions map
-    private static final Map<Route, RoutePermission> permissions = new ConcurrentHashMap<>();
 
     // Private constructor to prevent instantiation
     private RouteRegistry() {
@@ -34,18 +29,6 @@ final class RouteRegistry {
         routes
                 .computeIfAbsent(route.path(), k -> new HashMap<>()) // create inner map if path not present
                 .put(route.method(), route); // map HTTP method to the Route
-    }
-
-    public static void register(Route route, String[] roles) {
-        register(route);
-        RoutePermission perm = roles.length == 0
-                ? RoutePermission.publicRoute()
-                : RoutePermission.restricted(Set.of(roles));
-        permissions.put(route, perm);
-    }
-
-    public static RoutePermission findPermission(Route route) {
-        return permissions.getOrDefault(route, RoutePermission.publicRoute());
     }
 
     /**

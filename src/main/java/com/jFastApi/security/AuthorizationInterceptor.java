@@ -2,25 +2,29 @@ package com.jFastApi.security;
 
 import com.jFastApi.annotation.SystemInterceptorBean;
 import com.jFastApi.exception.ForbiddenException;
+import com.jFastApi.exception.TooManyRequestException;
 import com.jFastApi.http.Route;
 import com.jFastApi.http.interceptor.Interceptor;
 import com.jFastApi.util.JwtHelper;
 import com.jFastApi.util.RequestUtility;
 import com.jFastApi.util.StringUtility;
+import com.jFastApi.util.TimeUtility;
 import com.sun.net.httpserver.HttpExchange;
 
+import java.time.Duration;
 import java.util.Collection;
-import java.util.List;
 
 @SystemInterceptorBean(order = 1)
 public class AuthorizationInterceptor implements Interceptor {
 
     private final AuthUserService authUserService;
     private final JwtHelper jwtHelper;
+    private final ApiRateLimiter rateLimiter;
 
-    public AuthorizationInterceptor(AuthUserService authUserService, JwtHelper jwtHelper) {
+    public AuthorizationInterceptor(AuthUserService authUserService, JwtHelper jwtHelper, ApiRateLimiter rateLimiter) {
         this.authUserService = authUserService;
         this.jwtHelper = jwtHelper;
+        this.rateLimiter = rateLimiter;
     }
 
     /**
@@ -37,11 +41,17 @@ public class AuthorizationInterceptor implements Interceptor {
     public boolean preHandle(HttpExchange exchange, Route route) {
 
         String path = exchange.getRequestURI().getPath();
+        Duration duration = TimeUtility.toDuration(route.time(), route.timeUnit());
 
         // Allow unauthenticated access to login endpoint,
         // or if security is globally disabled,
         // or if the route is not marked as secured
         if ("/login".equals(path) || !SecurityContext.isEnabled() || !route.authorized()) {
+            String ip = RequestUtility.getClientIp(exchange);
+            if (!rateLimiter.canLoad(ip, route.limit(), duration) && !route.disableRateLimiter()) {
+                throw new TooManyRequestException("Too Many request!");
+            }
+
             return true;
         }
 
@@ -54,11 +64,16 @@ public class AuthorizationInterceptor implements Interceptor {
         // Extract token and validate user identity
         String token = authorization.substring(7);
         String username = jwtHelper.extractUsername(token);
+
         AuthUser user = authUserService.loadUserByUsername(username);
 
         // Reject invalid or expired token
         if (!jwtHelper.isValidToken(token, user.getUsername())) {
             throw new AuthenticationException("Unauthorized");
+        }
+
+        if (!rateLimiter.canLoad(username, route.limit(), duration) && !route.disableRateLimiter()) {
+            throw new TooManyRequestException("Too Many request!");
         }
 
         if (route.authorities().isEmpty()) {

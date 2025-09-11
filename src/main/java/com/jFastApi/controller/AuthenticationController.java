@@ -37,7 +37,7 @@ public class AuthenticationController {
         int accessTokenExpiration = PropertiesUtil.getPropertyInteger(PropertiesUtil.SECURITY_ACCESS_TOKEN_TIMEOUT,
                 18000000);
 
-        int refreshTokenExpiration = PropertiesUtil.getPropertyInteger(PropertiesUtil.SECURITY_ACCESS_TOKEN_TIMEOUT,
+        int refreshTokenExpiration = PropertiesUtil.getPropertyInteger(PropertiesUtil.SECURITY_REFRESH_TOKEN_TIMEOUT,
                 604800000);
 
         Map<String, Object> claims = new HashMap<>();

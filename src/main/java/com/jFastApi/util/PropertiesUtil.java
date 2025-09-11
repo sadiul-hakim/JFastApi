@@ -31,6 +31,7 @@ public final class PropertiesUtil {
     public static final String SECURITY_SECRET_KEY = "app.security.secret_key";
     public static final String SECURITY_ACCESS_TOKEN_TIMEOUT = "app.security.access_token.timeout";
     public static final String SECURITY_REFRESH_TOKEN_TIMEOUT = "app.security.refresh_token.timeout";
+    public static final String SECURITY_RATE_LIMIT_ENABLED = "app.security.api.rate_limiter.enabled";
 
     static {
 
