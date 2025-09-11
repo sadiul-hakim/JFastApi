@@ -19,5 +19,7 @@ public @interface HttpRoute {
      * Empty array means public route.
      */
     String[] roles() default {};
+
+    boolean authorized() default false;
 }
 

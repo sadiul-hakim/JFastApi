@@ -14,6 +14,7 @@ import com.jFastApi.security.AuthenticationException;
 import com.jFastApi.util.*;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import io.jsonwebtoken.ExpiredJwtException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -68,7 +69,8 @@ public class RouteScanner {
                     route.method(),            // HTTP method (GET, POST, etc.)
                     method,                    // Handler method reference
                     method.getDeclaringClass(), // Controller class that owns the method
-                    Arrays.asList(route.roles())
+                    Arrays.asList(route.roles()),
+                    route.roles().length > 0 || route.authorized()
             ));
         }
     }
@@ -157,6 +159,9 @@ public class RouteScanner {
             // Known application-level error → return 400
             ResponseUtility.sendErrorResponse(ex, exchange, HttpStatus.FORBIDDEN);
 
+        } catch (ExpiredJwtException ex) {
+
+            ResponseUtility.sendErrorResponse(ex, exchange, HttpStatus.UNAUTHORIZED);
         } catch (UnauthorizedException | AuthenticationException ex) {
 
             // Known application-level error → return 400

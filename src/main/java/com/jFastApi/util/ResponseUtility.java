@@ -25,6 +25,7 @@ public final class ResponseUtility {
      * @param statusCode The HTTP status code to send (e.g., 400, 404, 500).
      */
     public static void sendErrorResponse(Exception ex, HttpExchange exchange, HttpStatus statusCode) {
+
         // Create a simple map with a "message" field containing the exception message
         Map<String, String> response = new HashMap<>();
         response.put("message", ex.getMessage());
