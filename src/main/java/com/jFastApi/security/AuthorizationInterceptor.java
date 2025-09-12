@@ -14,7 +14,7 @@ import com.sun.net.httpserver.HttpExchange;
 import java.time.Duration;
 import java.util.Collection;
 
-@SystemInterceptorBean(order = 1)
+@SystemInterceptorBean(order = 2)
 public class AuthorizationInterceptor implements Interceptor {
 
     private final AuthUserService authUserService;

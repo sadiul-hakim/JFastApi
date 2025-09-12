@@ -5,9 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public final class PropertiesUtil {
     private PropertiesUtil() {
@@ -32,6 +30,7 @@ public final class PropertiesUtil {
     public static final String SECURITY_ACCESS_TOKEN_TIMEOUT = "app.security.access_token.timeout";
     public static final String SECURITY_REFRESH_TOKEN_TIMEOUT = "app.security.refresh_token.timeout";
     public static final String SECURITY_RATE_LIMIT_ENABLED = "app.security.api.rate_limiter.enabled";
+    public static final String SECURITY_ALLOWED_ORIGIN = "app.security.allowed.origins";
 
     static {
 
@@ -105,4 +104,12 @@ public final class PropertiesUtil {
         return result;
     }
 
+    public static List<String> getValueList(String key) {
+        String property = getProperty(key);
+        if (property == null) {
+            return List.of();
+        }
+        String[] arr = property.split(",");
+        return Arrays.asList(arr);
+    }
 }
