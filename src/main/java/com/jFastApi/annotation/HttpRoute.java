@@ -21,7 +21,7 @@ public @interface HttpRoute {
      */
     String[] roles() default {};
 
-    boolean authorized() default false;
+    boolean authorized() default true;
 
     int limit() default 5;
 
